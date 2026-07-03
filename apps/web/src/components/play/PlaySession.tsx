@@ -35,6 +35,8 @@ export default function PlaySession({ deck }: PlaySessionProps) {
   }
 
   if (session.phase === "cards" && session.currentCard) {
+    const upcoming = session.order.slice(session.index + 1, session.index + 3);
+
     return (
       <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center gap-6 px-6 py-12">
         <p className="text-center text-sm text-encre/50">
@@ -43,6 +45,7 @@ export default function PlaySession({ deck }: PlaySessionProps) {
         <SwipeDeck
           deck={deck}
           card={session.currentCard}
+          upcoming={upcoming}
           onAccept={session.accept}
           onDecline={session.decline}
           onContinueEvent={session.continueEvent}
