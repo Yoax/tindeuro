@@ -16,6 +16,26 @@ export const DRAFT_STORAGE_KEY = "budget-game:drafts";
 
 const draftDeckSchema = deckSchema.extend({ title: z.string() });
 
+/**
+ * Code court + editKey du deck publié correspondant au brouillon actuel,
+ * s'il l'a déjà été — voir SPEC.md §2 : « editKey… stocké dans le
+ * brouillon localStorage de l'animateur », pour permettre la réédition
+ * sans changer de code (voir ShareModal, étape 8).
+ */
+export type PublishedInfo = { code: string; editKey: string };
+
+export type DraftState = {
+  deck: Deck;
+  publishedAs: PublishedInfo | null;
+};
+
+const publishedInfoSchema = z.object({ code: z.string().min(1), editKey: z.string().min(1) });
+
+const draftStateSchema = z.object({
+  deck: draftDeckSchema,
+  publishedAs: publishedInfoSchema.nullable(),
+});
+
 export function createBlankDeck(): Deck {
   return {
     version: 1,
@@ -29,26 +49,30 @@ export function createBlankDeck(): Deck {
   };
 }
 
+export function createBlankDraftState(): DraftState {
+  return { deck: createBlankDeck(), publishedAs: null };
+}
+
 export interface DraftStorage {
   getItem(key: string): string | null;
   setItem(key: string, value: string): void;
 }
 
-export function loadDraft(storage: DraftStorage): Deck | null {
+export function loadDraft(storage: DraftStorage): DraftState | null {
   try {
     const raw = storage.getItem(DRAFT_STORAGE_KEY);
     if (!raw) return null;
     const parsed: unknown = JSON.parse(raw);
-    const result = draftDeckSchema.safeParse(parsed);
+    const result = draftStateSchema.safeParse(parsed);
     return result.success ? result.data : null;
   } catch {
     return null;
   }
 }
 
-export function saveDraft(storage: DraftStorage, deck: Deck): void {
+export function saveDraft(storage: DraftStorage, state: DraftState): void {
   try {
-    storage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(deck));
+    storage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(state));
   } catch {
     // localStorage indisponible (navigation privée stricte, quota plein…) :
     // on n'interrompt pas l'édition, seule la persistance est perdue.

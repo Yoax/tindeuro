@@ -29,4 +29,4 @@ pour les routes, variables d'environnement et le déploiement Docker/Caddy.
 
 ## État d'avancement
 
-Voir le plan de build en [`SPEC.md` §9](./SPEC.md#9-plan-de-build-ordre-des-sessions-cursor). Étapes terminées : **1 à 7** (scaffold, noyau partagé, mode joueur, révélation, swipe façon Tinder, éditeur, backend). Restent : **8** (partage hybride — ShareModal, QR, route `/j/:code`) et **9** (polish).
+Voir le plan de build en [`SPEC.md` §9](./SPEC.md#9-plan-de-build-ordre-des-sessions-cursor). Étapes terminées : **1 à 8** (scaffold, noyau partagé, mode joueur, révélation, swipe façon Tinder, éditeur, backend, partage hybride). Reste : **9** (polish — accessibilité, responsive éditeur, écrans d'erreur, accueil final).

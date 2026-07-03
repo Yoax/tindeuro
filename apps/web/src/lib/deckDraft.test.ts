@@ -4,11 +4,13 @@ import {
   DRAFT_STORAGE_KEY,
   addOrReplaceCard,
   createBlankDeck,
+  createBlankDraftState,
   duplicateCardById,
   loadDraft,
   moveCardById,
   removeCardById,
   saveDraft,
+  type DraftState,
   type DraftStorage,
 } from "./deckDraft";
 
@@ -53,17 +55,24 @@ describe("loadDraft / saveDraft", () => {
 
   it("relit exactement ce qui a été sauvegardé", () => {
     const storage = fakeStorage();
-    const deck = createBlankDeck();
-    saveDraft(storage, deck);
-    expect(loadDraft(storage)).toEqual(deck);
+    const state = createBlankDraftState();
+    saveDraft(storage, state);
+    expect(loadDraft(storage)).toEqual(state);
   });
 
   it("accepte un brouillon avec un titre vide (schéma assoupli)", () => {
     const storage = fakeStorage();
-    saveDraft(storage, createBlankDeck());
+    saveDraft(storage, createBlankDraftState());
     const loaded = loadDraft(storage);
     expect(loaded).not.toBeNull();
-    expect(loaded?.title).toBe("");
+    expect(loaded?.deck.title).toBe("");
+  });
+
+  it("conserve le code et l'editKey d'un deck déjà publié", () => {
+    const storage = fakeStorage();
+    const state: DraftState = { deck: createBlankDeck(), publishedAs: { code: "MK7PA", editKey: "secret" } };
+    saveDraft(storage, state);
+    expect(loadDraft(storage)?.publishedAs).toEqual({ code: "MK7PA", editKey: "secret" });
   });
 
   it("retourne null si le contenu stocké n'est pas un JSON valide", () => {
@@ -83,7 +92,7 @@ describe("loadDraft / saveDraft", () => {
         throw new Error("quota exceeded");
       },
     };
-    expect(() => saveDraft(storage, createBlankDeck())).not.toThrow();
+    expect(() => saveDraft(storage, createBlankDraftState())).not.toThrow();
   });
 });
 

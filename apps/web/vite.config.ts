@@ -7,4 +7,12 @@ import react from "@vitejs/plugin-react";
 export default defineConfig({
   base: process.env.VITE_BASE ?? "/",
   plugins: [react()],
+  server: {
+    // En dev, front (5173) et backend (8787) sont sur des ports différents :
+    // ce proxy les fait apparaître même origine, comme en prod derrière
+    // Caddy (voir apps/api/Caddyfile.example et SPEC.md §7).
+    proxy: {
+      "/api": process.env.VITE_API_PROXY_TARGET ?? "http://localhost:8787",
+    },
+  },
 });

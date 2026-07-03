@@ -5,6 +5,7 @@ import DeckSettings from "../components/editor/DeckSettings";
 import CardList from "../components/editor/CardList";
 import CardForm from "../components/editor/CardForm";
 import ImportExport from "../components/editor/ImportExport";
+import ShareModal from "../components/editor/ShareModal";
 import PlaySession from "../components/play/PlaySession";
 import Button from "../components/ui/Button";
 
@@ -16,6 +17,7 @@ import Button from "../components/ui/Button";
 export default function Editor() {
   const {
     deck,
+    publishedAs,
     updateSettings,
     saveCard,
     removeCard,
@@ -24,16 +26,23 @@ export default function Editor() {
     loadExample,
     resetBlank,
     replaceDeck,
+    markPublished,
   } = useDeckDraft();
 
   const [editingId, setEditingId] = useState<string | "new" | null>(null);
   const [previewing, setPreviewing] = useState(false);
   const [previewKey, setPreviewKey] = useState(0);
+  const [sharing, setSharing] = useState(false);
 
   const categories = useMemo(() => {
     const fromDeck = deck.cards.map((c) => c.category);
     return Array.from(new Set([...suggestedCategories, ...fromDeck]));
   }, [deck.cards]);
+
+  // Un deck sans titre ou sans carte ne peut ni se jouer ni se partager
+  // valablement (le schéma du deck exige un titre, et une partie vide
+  // n'a pas de sens) — voir SPEC.md §4.
+  const canPlay = deck.title.trim().length > 0 && deck.cards.length > 0;
 
   const editingCard = editingId && editingId !== "new" ? (deck.cards.find((c) => c.id === editingId) ?? null) : null;
 
@@ -126,11 +135,28 @@ export default function Editor() {
         )}
       </section>
 
-      <div className="sticky bottom-4 flex justify-center">
-        <Button onClick={openPreview} disabled={deck.cards.length === 0}>
-          Prévisualiser
-        </Button>
+      <div className="sticky bottom-4 flex flex-col items-center gap-2">
+        <div className="flex justify-center gap-3">
+          <Button variant="ghost" onClick={openPreview} disabled={!canPlay} className="bg-white shadow-sm">
+            Prévisualiser
+          </Button>
+          <Button onClick={() => setSharing(true)} disabled={!canPlay}>
+            Partager
+          </Button>
+        </div>
+        {!canPlay && (
+          <p className="text-xs text-encre/50">Ajoute un titre et au moins une carte pour prévisualiser ou partager.</p>
+        )}
       </div>
+
+      {sharing && (
+        <ShareModal
+          deck={deck}
+          publishedAs={publishedAs}
+          onPublished={markPublished}
+          onClose={() => setSharing(false)}
+        />
+      )}
     </main>
   );
 }
