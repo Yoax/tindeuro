@@ -1,0 +1,26 @@
+/* Français = latin + latin-ext (caractères accentués) uniquement, pour ne
+   pas embarquer les autres écritures (cyrillique, vietnamien…). */
+@import "@fontsource/public-sans/latin-400.css";
+@import "@fontsource/public-sans/latin-500.css";
+@import "@fontsource/public-sans/latin-700.css";
+@import "@fontsource/public-sans/latin-ext-400.css";
+@import "@fontsource/public-sans/latin-ext-500.css";
+@import "@fontsource/public-sans/latin-ext-700.css";
+@import "@fontsource/ibm-plex-mono/latin-400.css";
+@import "@fontsource/ibm-plex-mono/latin-500.css";
+@import "@fontsource/ibm-plex-mono/latin-ext-400.css";
+@import "@fontsource/ibm-plex-mono/latin-ext-500.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    @apply text-base;
+  }
+
+  body {
+    @apply bg-fond text-encre font-sans antialiased;
+  }
+}
