@@ -24,3 +24,35 @@
     @apply bg-fond text-encre font-sans antialiased;
   }
 }
+
+@layer components {
+  /*
+   * Bord légèrement cranté du ticket de caisse (élément signature,
+   * voir SPEC.md §8). Suppose un fond de page clair et uni (`--tw-fond`)
+   * derrière la carte blanche du ticket.
+   */
+  .receipt {
+    position: relative;
+  }
+
+  .receipt::before,
+  .receipt::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 10px;
+    background-image: radial-gradient(circle at 10px 5px, transparent 9px, #f1f4f3 9px);
+    background-size: 20px 10px;
+    background-repeat: repeat-x;
+  }
+
+  .receipt::before {
+    top: -9px;
+  }
+
+  .receipt::after {
+    bottom: -9px;
+    transform: scaleY(-1);
+  }
+}
