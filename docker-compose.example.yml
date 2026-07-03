@@ -1,0 +1,33 @@
+# Exemple d'assemblage local du déploiement décrit dans SPEC.md §7 :
+# `apps/web` buildé en statique, servi par Caddy, qui route `/api/*` vers
+# le conteneur du backend. À adapter (nom de domaine, volumes) pour un
+# vrai déploiement.
+#
+# Usage :
+#   npm run build --workspace=apps/web   # génère apps/web/dist
+#   docker compose -f docker-compose.example.yml up --build
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    environment:
+      FRONT_ORIGIN: "http://localhost:8080"
+    volumes:
+      - backend-data:/data
+    expose:
+      - "8787"
+
+  caddy:
+    image: caddy:2-alpine
+    depends_on:
+      - backend
+    ports:
+      - "8080:80"
+    volumes:
+      - ./apps/api/Caddyfile.example:/etc/caddy/Caddyfile
+      - ./apps/web/dist:/srv/web:ro
+
+volumes:
+  backend-data:

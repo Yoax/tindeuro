@@ -15,9 +15,12 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-# Backend (apps/api, étape 7 du plan de build)
+# Backend (apps/api)
 *.sqlite
 *.sqlite3
+*.sqlite-shm
+*.sqlite-wal
+apps/api/data/
 
 # Éditeurs / OS
 .vscode/*

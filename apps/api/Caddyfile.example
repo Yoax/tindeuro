@@ -1,0 +1,20 @@
+# Exemple de configuration Caddy — voir SPEC.md §7.
+#
+# Sert le front statique (build de `apps/web`) à la racine, et route
+# `/api/*` vers le conteneur du backend. Même domaine des deux côtés :
+# pas de CORS à configurer entre le front et l'API en production
+# (le `FRONT_ORIGIN` du backend sert surtout de garde-fou, voir README).
+
+budget-game.example {
+	handle /api/* {
+		reverse_proxy backend:8787
+	}
+
+	handle {
+		root * /srv/web
+		try_files {path} /index.html
+		file_server
+	}
+
+	encode gzip
+}
