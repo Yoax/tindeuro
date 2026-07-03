@@ -6,6 +6,8 @@ import BudgetSetup from "./BudgetSetup";
 import SwipeDeck from "./SwipeDeck";
 import RevealTicket from "./RevealTicket";
 import WhatIf from "./WhatIf";
+import PlayShell, { PlayHeader } from "./PlayShell";
+import TinderCard from "./TinderCard";
 import Button from "../ui/Button";
 
 type PlaySessionProps = {
@@ -13,24 +15,27 @@ type PlaySessionProps = {
 };
 
 /**
- * Orchestre la partie complète pour un deck donné : écran d'accueil
- * (titre + intro + enveloppe), enchaînement des cartes, puis révélation
- * en 3 temps (voir SPEC.md §3.2 et §6). Réutilisable aussi bien pour
- * `/jouer` et `/j/:code` que pour la prévisualisation dans l'éditeur
- * (étape 6).
+ * Parcours joueur complet — coque UX façon Tinder (PlayShell) de l'écran
+ * d'enveloppe jusqu'à la révélation, footer toujours visible.
  */
 export default function PlaySession({ deck }: PlaySessionProps) {
   const session = usePlaySession(deck);
 
   if (session.phase === "setup") {
     return (
-      <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center gap-8 px-6 py-12">
-        <div>
-          <h1 className="text-2xl font-bold">{deck.title}</h1>
-          {deck.intro && <p className="mt-3 text-encre/80">{deck.intro}</p>}
+      <PlayShell header={<PlayHeader label="Nouveau match budget" />}>
+        <div className="flex min-h-0 flex-1 flex-col justify-center py-4">
+          <TinderCard className="min-h-[28rem]">
+            <div className="flex flex-1 flex-col justify-between p-6">
+              <div>
+                <h1 className="text-3xl font-bold leading-tight text-encre">{deck.title}</h1>
+                {deck.intro && <p className="mt-4 text-lg leading-relaxed text-encre/80">{deck.intro}</p>}
+              </div>
+              <BudgetSetup budget={deck.budget} currency={deck.currency} onConfirm={session.confirmBudget} />
+            </div>
+          </TinderCard>
         </div>
-        <BudgetSetup budget={deck.budget} currency={deck.currency} onConfirm={session.confirmBudget} />
-      </main>
+      </PlayShell>
     );
   }
 
@@ -38,10 +43,7 @@ export default function PlaySession({ deck }: PlaySessionProps) {
     const upcoming = session.order.slice(session.index + 1, session.index + 3);
 
     return (
-      <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center gap-6 px-6 py-12">
-        <p className="text-center text-sm text-encre/50">
-          {session.index + 1} / {session.total}
-        </p>
+      <PlayShell header={<PlayHeader progress={{ current: session.index + 1, total: session.total }} />}>
         <SwipeDeck
           deck={deck}
           card={session.currentCard}
@@ -50,11 +52,18 @@ export default function PlaySession({ deck }: PlaySessionProps) {
           onDecline={session.decline}
           onContinueEvent={session.continueEvent}
         />
-      </main>
+      </PlayShell>
     );
   }
 
-  return <Reveal deck={deck} accepted={session.accepted} budget={session.budget ?? 0} onRestart={session.restart} />;
+  return (
+    <Reveal
+      deck={deck}
+      accepted={session.accepted}
+      budget={session.budget ?? 0}
+      onRestart={session.restart}
+    />
+  );
 }
 
 type RevealStep = "constat" | "ticket" | "whatif";
@@ -73,37 +82,53 @@ function Reveal({
   const [step, setStep] = useState<RevealStep>("constat");
   const results = computeResults(accepted, budget);
   const hasWhatIf = results.whatIf.topCards.length > 0;
-  const showFooter = step === "whatif" || (step === "ticket" && !hasWhatIf);
+  const showActions = step === "whatif" || (step === "ticket" && !hasWhatIf);
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center gap-6 px-6 py-12">
-      {/* Temps 1 : le constat, neutre — voir SPEC.md §6. */}
-      <p className={`text-2xl font-medium ${results.withinBudget ? "text-tenu" : "text-depasse"}`}>
-        {results.withinBudget
-          ? `Tes choix totalisent ${results.total} ${deck.currency}. Il te reste ${results.remaining} ${deck.currency}.`
-          : `Tu avais prévu ${budget} ${deck.currency}. Tes choix totalisent ${results.total} ${deck.currency}.`}
-      </p>
+    <PlayShell header={<PlayHeader label="Résultat" />} scrollable>
+      <div className="flex flex-col gap-5 py-4">
+        <TinderCard>
+          <div className="p-6">
+            <p className={`text-2xl font-semibold leading-snug ${results.withinBudget ? "text-tenu" : "text-depasse"}`}>
+              {results.withinBudget
+                ? `Tes choix totalisent ${results.total} ${deck.currency}. Il te reste ${results.remaining} ${deck.currency}.`
+                : `Tu avais prévu ${budget} ${deck.currency}. Tes choix totalisent ${results.total} ${deck.currency}.`}
+            </p>
+            {step === "constat" && (
+              <Button variant="pill" className="mt-6" onClick={() => setStep("ticket")}>
+                Voir le détail
+              </Button>
+            )}
+          </div>
+        </TinderCard>
 
-      {step === "constat" && <Button onClick={() => setStep("ticket")}>Voir le détail</Button>}
+        {step !== "constat" && (
+          <RevealTicket ticket={results.ticket} categoryTotals={results.categoryTotals} currency={deck.currency} />
+        )}
 
-      {/* Temps 2 : le ticket de caisse. */}
-      {step !== "constat" && (
-        <RevealTicket ticket={results.ticket} categoryTotals={results.categoryTotals} currency={deck.currency} />
-      )}
+        {step === "ticket" && hasWhatIf && (
+          <Button variant="pill" onClick={() => setStep("whatif")}>
+            Voir la suite
+          </Button>
+        )}
 
-      {step === "ticket" && hasWhatIf && <Button onClick={() => setStep("whatif")}>Voir la suite</Button>}
+        {step === "whatif" && (
+          <TinderCard>
+            <div className="p-6">
+              <WhatIf whatIf={results.whatIf} currency={deck.currency} />
+            </div>
+          </TinderCard>
+        )}
 
-      {/* Temps 3 : « Et si ? ». */}
-      {step === "whatif" && <WhatIf whatIf={results.whatIf} currency={deck.currency} />}
-
-      {showFooter && (
-        <div className="mt-2 flex flex-col gap-3">
-          <Button onClick={onRestart}>Rejouer</Button>
-          <p className="text-center text-xs text-encre/50">
-            Aucune donnée n'est enregistrée ni envoyée.
-          </p>
-        </div>
-      )}
-    </main>
+        {showActions && (
+          <div className="flex flex-col gap-3 pb-2">
+            <Button variant="pill" onClick={onRestart}>
+              Rejouer
+            </Button>
+            <p className="text-center text-xs text-encre/70">Aucune donnée n&apos;est enregistrée ni envoyée.</p>
+          </div>
+        )}
+      </div>
+    </PlayShell>
   );
 }

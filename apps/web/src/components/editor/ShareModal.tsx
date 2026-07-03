@@ -124,7 +124,7 @@ export default function ShareModal({ deck, publishedAs, onPublished, onClose }: 
             type="button"
             onClick={onClose}
             aria-label="Fermer"
-            className="text-2xl leading-none text-encre/50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-2xl leading-none text-encre/70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
           >
             ×
           </button>
@@ -136,7 +136,7 @@ export default function ShareModal({ deck, publishedAs, onPublished, onClose }: 
 
         {!showFallback && status === "success" && code && (
           <div className="flex flex-col items-center gap-4 text-center">
-            <p className="text-sm text-encre/60">{wasUpdate ? "Deck mis à jour, même code." : "Deck publié."}</p>
+            <p className="text-sm text-encre/70">{wasUpdate ? "Deck mis à jour, même code." : "Deck publié."}</p>
             <p className="font-mono text-5xl font-bold tracking-widest">{code}</p>
             <QRCodeSVG value={buildUrl(`j/${code}`)} size={180} level="M" />
             <input readOnly value={buildUrl(`j/${code}`)} onFocus={(e) => e.currentTarget.select()} className={inputLikeClass} />
@@ -153,18 +153,18 @@ export default function ShareModal({ deck, publishedAs, onPublished, onClose }: 
                 Le serveur est injoignable. Voici un lien qui fonctionne sans lui.
               </p>
             )}
-            <p className="text-sm text-encre/60">
+            <p className="text-sm text-encre/70">
               Lien autonome : le deck est encodé dans le lien lui-même, rien n'est envoyé à un serveur.
             </p>
             {fallbackBytes <= FALLBACK_QR_MAX_BYTES ? (
               <>
                 <QRCodeSVG value={fallbackUrl} size={180} level="M" />
                 {fallbackBytes > FALLBACK_QR_DENSE_BYTES && (
-                  <p className="text-xs text-encre/50">QR dense — à approcher pour le scanner.</p>
+                  <p className="text-xs text-encre/70">QR dense — à approcher pour le scanner.</p>
                 )}
               </>
             ) : (
-              <p className="text-xs text-encre/50">
+              <p className="text-xs text-encre/70">
                 Deck trop volumineux pour un QR lisible — partage le lien directement.
               </p>
             )}
@@ -186,7 +186,7 @@ export default function ShareModal({ deck, publishedAs, onPublished, onClose }: 
           </div>
         )}
 
-        <label className="flex items-center gap-2 text-sm text-encre/70">
+        <label className="flex min-h-11 items-center gap-2 text-sm text-encre/70">
           <input
             type="checkbox"
             checked={offline}

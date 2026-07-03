@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
+import { categoriesFromCards } from "@budget-game/shared";
 import { useDeckDraft } from "../lib/useDeckDraft";
-import { suggestedCategories } from "../data/exampleDeck";
 import DeckSettings from "../components/editor/DeckSettings";
 import CardList from "../components/editor/CardList";
 import CardForm from "../components/editor/CardForm";
@@ -35,9 +35,12 @@ export default function Editor() {
   const [sharing, setSharing] = useState(false);
 
   const categories = useMemo(() => {
-    const fromDeck = deck.cards.map((c) => c.category);
-    return Array.from(new Set([...suggestedCategories, ...fromDeck]));
-  }, [deck.cards]);
+    const merged = [...deck.categories];
+    for (const category of categoriesFromCards(deck.cards)) {
+      if (!merged.includes(category)) merged.push(category);
+    }
+    return merged;
+  }, [deck.categories, deck.cards]);
 
   // Un deck sans titre ou sans carte ne peut ni se jouer ni se partager
   // valablement (le schéma du deck exige un titre, et une partie vide
@@ -67,7 +70,7 @@ export default function Editor() {
 
   if (previewing) {
     return (
-      <div className="min-h-screen">
+      <div className="flex flex-1 flex-col">
         <div className="sticky top-0 z-10 flex justify-center bg-fond/95 py-2 backdrop-blur">
           <Button variant="ghost" onClick={() => setPreviewing(false)}>
             ← Fermer la prévisualisation
@@ -79,11 +82,11 @@ export default function Editor() {
   }
 
   return (
-    <main className="mx-auto flex max-w-2xl flex-col gap-8 px-6 py-12">
+    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-8 px-6 py-12 pb-28">
       <header className="flex flex-col gap-3">
-        <h1 className="text-2xl font-bold">Créer un atelier</h1>
+        <h1 className="text-2xl font-bold">Créer ton Tindeuro, c&apos;est gratuit !</h1>
         <p className="text-encre/70">
-          Configure ton deck et ajoute tes cartes. Le brouillon est sauvegardé automatiquement sur cet appareil.
+          Configure ton deck et ajoute tes cartes : exporte-le ensuite sur ton ordinateur !
         </p>
         <div className="flex flex-wrap gap-3">
           <Button variant="ghost" onClick={handleLoadExample}>
@@ -135,7 +138,7 @@ export default function Editor() {
         )}
       </section>
 
-      <div className="sticky bottom-4 flex flex-col items-center gap-2">
+      <div className="sticky bottom-0 -mx-6 flex flex-col items-center gap-2 border-t border-encre/10 bg-fond/95 px-6 py-4 backdrop-blur sm:bottom-4 sm:mx-0 sm:border-0 sm:bg-transparent sm:py-0 sm:backdrop-blur-none">
         <div className="flex justify-center gap-3">
           <Button variant="ghost" onClick={openPreview} disabled={!canPlay} className="bg-white shadow-sm">
             Prévisualiser
@@ -145,7 +148,7 @@ export default function Editor() {
           </Button>
         </div>
         {!canPlay && (
-          <p className="text-xs text-encre/50">Ajoute un titre et au moins une carte pour prévisualiser ou partager.</p>
+          <p className="text-xs text-encre/70">Ajoute un titre et au moins une carte pour prévisualiser ou partager.</p>
         )}
       </div>
 

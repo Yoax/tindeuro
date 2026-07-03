@@ -19,7 +19,7 @@ export default function Field({ label, htmlFor, hint, error, children }: FieldPr
         {label}
       </label>
       {children}
-      {hint && !error && <p className="text-xs text-encre/50">{hint}</p>}
+      {hint && !error && <p className="text-xs text-encre/70">{hint}</p>}
       {error && (
         <p role="alert" className="text-xs text-depasse">
           {error}

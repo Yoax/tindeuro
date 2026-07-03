@@ -1,6 +1,6 @@
-# Un mois ordinaire — jeu d'éducation budgétaire
+# Tindeuro — jeu d'éducation budgétaire
 
-Jeu web utilisé en atelier d'éducation budgétaire. Voir la spécification complète dans [`SPEC.md`](./SPEC.md).
+Jeu web utilisé en atelier d'éducation budgétaire : swipe tes dépenses, découvre l'écart avec ton enveloppe. Voir la spécification complète dans [`SPEC.md`](./SPEC.md).
 
 ## Structure du monorepo
 
@@ -29,4 +29,4 @@ pour les routes, variables d'environnement et le déploiement Docker/Caddy.
 
 ## État d'avancement
 
-Voir le plan de build en [`SPEC.md` §9](./SPEC.md#9-plan-de-build-ordre-des-sessions-cursor). Étapes terminées : **1 à 8** (scaffold, noyau partagé, mode joueur, révélation, swipe façon Tinder, éditeur, backend, partage hybride). Reste : **9** (polish — accessibilité, responsive éditeur, écrans d'erreur, accueil final).
+Voir le plan de build en [`SPEC.md` §9](./SPEC.md#9-plan-de-build-ordre-des-sessions-cursor). Étapes terminées : **1 à 9** (scaffold, noyau partagé, mode joueur, révélation, swipe façon Tinder, éditeur, backend, partage hybride, polish).

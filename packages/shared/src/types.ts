@@ -25,6 +25,7 @@ export type Card = {
   visibility?: CostVisibility; // absent = hérite du deck
   recurring?: Recurring; // coût total = cost × times, révélé à la fin
   tags?: string[]; // pédagogiques : "pression-sociale", "urgence-artificielle", "recurrent", "imprevu"
+  imageUrl?: string; // illustration optionnelle, URL externe (pas d'upload/base64 — voir §4)
 };
 
 export type Deck = {
@@ -36,5 +37,7 @@ export type Deck = {
   defaultVisibility: CostVisibility;
   budget: BudgetMode;
   shuffle: boolean;
+  /** Catégories définies par l'animateur pour classer les cartes. */
+  categories: string[];
   cards: Card[];
 };

@@ -1,6 +1,6 @@
 import { nanoid } from "nanoid";
 import { z } from "zod";
-import { deckSchema, type Card, type Deck } from "@budget-game/shared";
+import { deckSchema, normalizeDeckCategories, type Card, type Deck } from "@budget-game/shared";
 
 /**
  * Persistance du brouillon de l'éditeur (mode Animateur) — voir SPEC.md §2
@@ -45,6 +45,7 @@ export function createBlankDeck(): Deck {
     defaultVisibility: "hidden",
     budget: { kind: "free" },
     shuffle: false,
+    categories: [],
     cards: [],
   };
 }
@@ -64,7 +65,8 @@ export function loadDraft(storage: DraftStorage): DraftState | null {
     if (!raw) return null;
     const parsed: unknown = JSON.parse(raw);
     const result = draftStateSchema.safeParse(parsed);
-    return result.success ? result.data : null;
+    if (!result.success) return null;
+    return { ...result.data, deck: normalizeDeckCategories(result.data.deck) };
   } catch {
     return null;
   }

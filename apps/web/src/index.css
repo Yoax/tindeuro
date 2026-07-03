@@ -55,4 +55,30 @@
     bottom: -9px;
     transform: scaleY(-1);
   }
+
+  /* Bandeau dégradé discret — rappel du logo, pas de feedback bon/mauvais en jeu. */
+  .tinder-flame-bar {
+    background: linear-gradient(90deg, #fd267a 0%, #ff7854 100%);
+  }
+
+  /* Titre en dégradé — accueil uniquement, pour un rendu "app de rencontre". */
+  .tinder-flame-text {
+    background: linear-gradient(90deg, #fd267a 0%, #ff7854 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+
+  /*
+   * Nappe de dégradés de l'accueil — posée en position fixe (voir Home.tsx)
+   * pour couvrir tout le viewport, y compris derrière le footer, plutôt
+   * que d'être bornée au seul bloc de contenu.
+   */
+  .tinder-glow-bg {
+    background:
+      radial-gradient(55% 45% at 88% 6%, rgba(253, 38, 122, 0.22), transparent 70%),
+      radial-gradient(50% 45% at 6% 96%, rgba(44, 93, 143, 0.16), transparent 70%),
+      radial-gradient(65% 55% at 50% 42%, rgba(255, 120, 84, 0.12), transparent 70%);
+  }
 }

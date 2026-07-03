@@ -26,6 +26,8 @@ function generateEditKey(): string {
 
 export interface DeckStore {
   createDeck(deck: Deck, now?: number): { code: string; editKey: string };
+  /** Insère le deck à un code fixe s'il n'existe pas encore (seed démo). */
+  ensureDeckAtCode(code: string, deck: Deck, now?: number): void;
   getDeck(code: string, now?: number): Deck | null;
   /** Retourne `true` si `editKey` correspondait, `false` sinon (code inconnu ou clé incorrecte). */
   updateDeck(code: string, editKey: string, deck: Deck, now?: number): boolean;
@@ -56,6 +58,11 @@ export function createStore(db: Database.Database): DeckStore {
       const editKey = generateEditKey();
       insertStmt.run(code, JSON.stringify(deck), editKey, now);
       return { code, editKey };
+    },
+
+    ensureDeckAtCode(code, deck, now = Date.now()) {
+      if (codeExists(code)) return;
+      insertStmt.run(code, JSON.stringify(deck), generateEditKey(), now);
     },
 
     getDeck(code, now = Date.now()) {

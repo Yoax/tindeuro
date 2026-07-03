@@ -1,5 +1,5 @@
 import { useRef, type ChangeEvent } from "react";
-import { deckSchema, type Deck } from "@budget-game/shared";
+import { deckSchema, normalizeDeckCategories, type Deck } from "@budget-game/shared";
 import Button from "../ui/Button";
 
 type ImportExportProps = {
@@ -38,7 +38,7 @@ export default function ImportExport({ deck, onImport }: ImportExportProps) {
         window.alert("Ce fichier ne semble pas être un deck valide.");
         return;
       }
-      onImport(result.data);
+      onImport(normalizeDeckCategories(result.data));
     } catch {
       window.alert("Impossible de lire ce fichier JSON.");
     }
@@ -47,10 +47,10 @@ export default function ImportExport({ deck, onImport }: ImportExportProps) {
   return (
     <div className="flex flex-wrap gap-3">
       <Button variant="ghost" onClick={handleExport}>
-        Exporter en JSON
+        Exporter
       </Button>
       <Button variant="ghost" onClick={() => inputRef.current?.click()}>
-        Importer un JSON
+        Importer
       </Button>
       <input ref={inputRef} type="file" accept="application/json" onChange={handleFileChange} className="hidden" />
     </div>

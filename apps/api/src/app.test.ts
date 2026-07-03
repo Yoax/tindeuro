@@ -1,8 +1,9 @@
 import Database from "better-sqlite3";
 import { describe, expect, it } from "vitest";
-import type { Deck } from "@budget-game/shared";
+import { DEMO_PLAY_CODE, exampleDeck, type Deck } from "@budget-game/shared";
 import { createApp } from "./app";
 import { createRateLimiter } from "./rateLimit";
+import { seedDemoDeck } from "./seedDemoDeck";
 import { createStore } from "./store";
 
 function sampleDeck(overrides: Partial<Deck> = {}): Deck {
@@ -14,6 +15,7 @@ function sampleDeck(overrides: Partial<Deck> = {}): Deck {
     defaultVisibility: "hidden",
     budget: { kind: "suggested", amount: 150 },
     shuffle: false,
+    categories: ["Alimentation"],
     cards: [{ id: "c1", kind: "decision", text: "Une situation", cost: 9, category: "Alimentation" }],
     ...overrides,
   };
@@ -151,6 +153,24 @@ describe("GET /api/decks/:code", () => {
     const app = makeApp();
     expect((await app.request("/api/decks/ABC")).status).toBe(404);
     expect((await app.request("/api/decks/AAAA0")).status).toBe(404); // "0" exclu de l'alphabet
+  });
+
+  it("retourne le deck d'exemple pour le code réservé TEST (seed)", async () => {
+    const db = new Database(":memory:");
+    const store = createStore(db);
+    seedDemoDeck(store);
+    const app = createApp({
+      store,
+      rateLimiter: createRateLimiter({ windowMs: 60 * 60 * 1000, max: 20 }),
+      allowedOrigin: "*",
+    });
+
+    const res = await app.request(`/api/decks/${DEMO_PLAY_CODE}`);
+    expect(res.status).toBe(200);
+    expect((await res.json()).title).toBe(exampleDeck.title);
+
+    const lower = await app.request("/api/decks/test");
+    expect(lower.status).toBe(200);
   });
 });
 

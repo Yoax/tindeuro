@@ -1,7 +1,7 @@
 import { Hono, type Context } from "hono";
 import { cors } from "hono/cors";
 import { z } from "zod";
-import { deckSchema } from "@budget-game/shared";
+import { deckSchema, isDemoPlayCode, normalizeDeckCategories } from "@budget-game/shared";
 import { CODE_ALPHABET, CODE_LENGTH } from "./codes";
 import type { DeckStore } from "./store";
 import type { RateLimiter } from "./rateLimit";
@@ -72,13 +72,13 @@ export function createApp({ store, rateLimiter, allowedOrigin }: AppDeps) {
       return c.json({ error: "Deck invalide.", issues: result.error.issues }, 400);
     }
 
-    const { code, editKey } = store.createDeck(result.data);
+    const { code, editKey } = store.createDeck(normalizeDeckCategories(result.data));
     return c.json({ code, editKey }, 201);
   });
 
   app.get("/api/decks/:code", (c) => {
     const code = c.req.param("code").toUpperCase();
-    if (!CODE_PATTERN.test(code)) {
+    if (!isDemoPlayCode(code) && !CODE_PATTERN.test(code)) {
       return c.json({ error: "Code introuvable." }, 404);
     }
 
@@ -101,7 +101,7 @@ export function createApp({ store, rateLimiter, allowedOrigin }: AppDeps) {
       return c.json({ error: "Requête invalide.", issues: result.error.issues }, 400);
     }
 
-    const updated = store.updateDeck(code, result.data.editKey, result.data.deck);
+    const updated = store.updateDeck(code, result.data.editKey, normalizeDeckCategories(result.data.deck));
     if (!updated) return c.json({ error: "Code ou clé d'édition incorrects." }, 403);
     return c.json({ ok: true }, 200);
   });

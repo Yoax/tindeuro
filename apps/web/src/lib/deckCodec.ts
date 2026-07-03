@@ -4,7 +4,7 @@ import {
 } from "lz-string";
 import { nanoid } from "nanoid";
 import { z } from "zod";
-import { deckSchema, type Card, type CostVisibility, type Deck } from "@budget-game/shared";
+import { deckSchema, normalizeDeckCategories, type Card, type CostVisibility, type Deck } from "@budget-game/shared";
 
 /**
  * Codec du canal de repli (deck auto-porteur dans le fragment d'URL) —
@@ -51,6 +51,7 @@ type MinifiedCard = {
   v?: MinifiedVisibility; // omis = hérite du deck
   n?: [number, string]; // recurring [times, label]
   a?: string[]; // tags, omis si vide
+  u?: string; // imageUrl, omis si absente
 };
 
 type MinifiedDeck = {
@@ -74,6 +75,7 @@ const minifiedCardSchema = z.object({
   v: z.enum(["h", "x", "r"]).optional(),
   n: z.tuple([z.number().int().positive(), z.string().min(1)]).optional(),
   a: z.array(z.string()).optional(),
+  u: z.string().min(1).optional(),
 });
 
 const minifiedBudgetSchema = z.union([
@@ -125,6 +127,7 @@ function minifyCard(card: Card, categories: string[]): MinifiedCard {
   if (card.visibility) minified.v = visibilityToLetter[card.visibility];
   if (card.recurring) minified.n = [card.recurring.times, card.recurring.label];
   if (card.tags && card.tags.length > 0) minified.a = card.tags;
+  if (card.imageUrl) minified.u = card.imageUrl;
 
   return minified;
 }
@@ -147,12 +150,13 @@ function expandCard(minified: MinifiedCard, categories: string[]): Card {
   if (minified.v) card.visibility = letterToVisibility[minified.v];
   if (minified.n) card.recurring = { times: minified.n[0], label: minified.n[1] };
   if (minified.a && minified.a.length > 0) card.tags = minified.a;
+  if (minified.u) card.imageUrl = minified.u;
 
   return card;
 }
 
 export function minifyDeck(deck: Deck): MinifiedDeck {
-  const categories: string[] = [];
+  const categories = [...deck.categories];
   const cards = deck.cards.map((card) => minifyCard(card, categories));
 
   const minified: MinifiedDeck = {
@@ -181,6 +185,7 @@ export function expandDeck(minified: MinifiedDeck): Deck {
     defaultVisibility: letterToVisibility[minified.d],
     budget: expandBudget(minified.b),
     shuffle: minified.s ?? false,
+    categories: [...minified.g],
     cards: minified.q.map((card) => expandCard(card, minified.g)),
   };
 }
@@ -230,5 +235,5 @@ export function decodeDeckFromFragment(fragment: string): DecodeDeckResult {
   const deckResult = deckSchema.safeParse(deck);
   if (!deckResult.success) return { ok: false, reason: "schema" };
 
-  return { ok: true, deck: deckResult.data };
+  return { ok: true, deck: normalizeDeckCategories(deckResult.data) };
 }

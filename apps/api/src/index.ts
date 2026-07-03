@@ -6,6 +6,7 @@ import { createApp } from "./app";
 import { createRateLimiter } from "./rateLimit";
 import { startRetentionSchedule } from "./retention";
 import { createStore } from "./store";
+import { seedDemoDeck } from "./seedDemoDeck";
 
 const PORT = Number(process.env.PORT ?? 8787);
 const DB_PATH = process.env.DB_PATH ?? "./data/decks.sqlite";
@@ -19,6 +20,7 @@ const db = new Database(DB_PATH);
 db.pragma("journal_mode = WAL");
 
 const store = createStore(db);
+seedDemoDeck(store);
 const rateLimiter = createRateLimiter({ windowMs: RATE_LIMIT_WINDOW_MS, max: RATE_LIMIT_MAX });
 const stopRetention = startRetentionSchedule(store);
 

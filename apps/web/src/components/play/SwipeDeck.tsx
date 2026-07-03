@@ -10,7 +10,6 @@ import Button from "../ui/Button";
 type SwipeDeckProps = {
   deck: Deck;
   card: Card;
-  /** 1 à 2 cartes suivantes, pour l'effet de pile (voir SPEC.md §8bis). */
   upcoming: Card[];
   onAccept: () => void;
   onDecline: () => void;
@@ -19,12 +18,6 @@ type SwipeDeckProps = {
 
 const REDUCED_MOTION_CONFIRM_DELAY = 220;
 
-/**
- * Présente la carte en cours façon Tinder : pile visible derrière,
- * drag avec rotation et tampons de décision, seuil + fling, boutons
- * ✕/✓/Continuer déclenchant la même animation, clavier, et repli
- * reduced-motion (confirmation textuelle brève). Voir SPEC.md §8bis.
- */
 export default function SwipeDeck({ deck, card, upcoming, onAccept, onDecline, onContinueEvent }: SwipeDeckProps) {
   const isEvent = card.kind === "event";
   const reducedMotion = useReducedMotion();
@@ -68,62 +61,60 @@ export default function SwipeDeck({ deck, card, upcoming, onAccept, onDecline, o
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-    // decide() ferme sur isExiting/reducedMotion à jour à chaque rendu ;
-    // seuls card.id et isEvent doivent redéclencher l'attache du listener.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [card.id, isEvent]);
 
   const visibility = resolveVisibility(card, deck.defaultVisibility);
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="relative">
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div className="relative min-h-0 flex-1">
         {upcoming[1] && (
-          <div className="absolute inset-0 h-[60vh] scale-90 rounded-2xl bg-white shadow-sm" aria-hidden="true" />
+          <div
+            className="absolute inset-x-3 top-3 bottom-3 scale-[0.88] rounded-3xl bg-white shadow-sm"
+            aria-hidden="true"
+          />
         )}
         {upcoming[0] && (
-          <div className="absolute inset-0 h-[60vh] scale-95 rounded-2xl bg-white shadow-sm" aria-hidden="true" />
+          <div
+            className="absolute inset-x-1.5 top-1.5 bottom-1.5 scale-[0.94] rounded-3xl bg-white shadow-sm"
+            aria-hidden="true"
+          />
         )}
 
-        <DraggableCard key={card.id} ref={draggableRef} horizontalDragEnabled={!isEvent} onExit={advance}>
-          {isEvent ? (
-            <EventCard card={card} visibility={visibility} currency={deck.currency} />
-          ) : (
-            <SwipeCard card={card} visibility={visibility} currency={deck.currency} />
+        <div className="relative h-full min-h-[50dvh]">
+          <DraggableCard key={card.id} ref={draggableRef} horizontalDragEnabled={!isEvent} onExit={advance}>
+            {isEvent ? (
+              <EventCard card={card} visibility={visibility} currency={deck.currency} />
+            ) : (
+              <SwipeCard card={card} visibility={visibility} currency={deck.currency} />
+            )}
+          </DraggableCard>
+
+          {confirmation && (
+            <div className="absolute inset-0 flex items-center justify-center rounded-3xl bg-white/90">
+              <p className="text-xl font-semibold text-encre">{confirmation}</p>
+            </div>
           )}
-        </DraggableCard>
-
-        {confirmation && (
-          <div className="absolute inset-0 flex h-[60vh] items-center justify-center rounded-2xl bg-white/90">
-            <p className="text-xl font-medium text-encre">{confirmation}</p>
-          </div>
-        )}
+        </div>
       </div>
 
-      {isEvent ? (
-        <Button onClick={() => decide("down")} disabled={isExiting} className="w-full">
-          Continuer
-        </Button>
-      ) : (
-        <div className="flex justify-center gap-8">
-          <Button
-            variant="icon"
-            onClick={() => decide("left")}
-            disabled={isExiting}
-            aria-label="Je refuse cette dépense"
-          >
-            ✕
+      <div className="flex shrink-0 items-center justify-center gap-8 py-5">
+        {isEvent ? (
+          <Button variant="pill" onClick={() => decide("down")} disabled={isExiting} className="max-w-xs">
+            Continuer
           </Button>
-          <Button
-            variant="icon"
-            onClick={() => decide("right")}
-            disabled={isExiting}
-            aria-label="J'accepte cette dépense"
-          >
-            ✓
-          </Button>
-        </div>
-      )}
+        ) : (
+          <>
+            <Button variant="tinder-no" onClick={() => decide("left")} disabled={isExiting} aria-label="Je refuse cette dépense">
+              ✕
+            </Button>
+            <Button variant="tinder-yes" onClick={() => decide("right")} disabled={isExiting} aria-label="J'accepte cette dépense">
+              ✓
+            </Button>
+          </>
+        )}
+      </div>
     </div>
   );
 }

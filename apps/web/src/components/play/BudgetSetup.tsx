@@ -9,25 +9,32 @@ type BudgetSetupProps = {
 };
 
 /**
- * Définition de l'enveloppe de dépenses, selon le mode configuré par
- * l'animateur — voir SPEC.md §2 et §3.2.
+ * Définition de l'enveloppe — présentée dans une carte façon Tinder
+ * (gros montant centré, CTA pill en bas).
  */
 export default function BudgetSetup({ budget, currency, onConfirm }: BudgetSetupProps) {
   if (budget.kind === "fixed") {
     return (
-      <div className="flex flex-col gap-4">
-        <p className="text-encre/80">
-          Pour cet atelier, ton enveloppe est fixée à :
+      <div className="flex flex-col items-center gap-8 py-4">
+        <p className="text-center text-lg text-encre/80">Pour cet atelier, ton enveloppe est fixée à</p>
+        <p className="font-mono text-5xl font-bold tracking-tight text-encre">
+          {budget.amount}
+          <span className="ml-2 text-3xl font-medium text-encre/70">{currency}</span>
         </p>
-        <p className="font-mono text-3xl font-medium">
-          {budget.amount} {currency}
-        </p>
-        <Button onClick={() => onConfirm(budget.amount)}>Commencer</Button>
+        <Button variant="pill" onClick={() => onConfirm(budget.amount)}>
+          C&apos;est parti
+        </Button>
       </div>
     );
   }
 
-  return <EditableBudgetForm defaultAmount={budget.kind === "suggested" ? budget.amount : undefined} currency={currency} onConfirm={onConfirm} />;
+  return (
+    <EditableBudgetForm
+      defaultAmount={budget.kind === "suggested" ? budget.amount : undefined}
+      currency={currency}
+      onConfirm={onConfirm}
+    />
+  );
 }
 
 function EditableBudgetForm({
@@ -50,13 +57,13 @@ function EditableBudgetForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-      <label htmlFor="budget-amount" className="text-encre/80">
+    <form onSubmit={handleSubmit} className="flex flex-col items-center gap-8 py-4">
+      <label htmlFor="budget-amount" className="text-center text-lg text-encre/80">
         {defaultAmount !== undefined
-          ? "Voici l'enveloppe suggérée pour cet atelier. Tu peux l'ajuster."
-          : "Combien veux-tu prévoir pour ces dépenses ?"}
+          ? "Ton enveloppe pour ce mois — ajuste-la si tu veux."
+          : "Combien prévois-tu pour ce mois ?"}
       </label>
-      <div className="flex items-center gap-2">
+      <div className="flex items-baseline justify-center gap-2">
         <input
           id="budget-amount"
           name="budget-amount"
@@ -66,12 +73,12 @@ function EditableBudgetForm({
           step="1"
           value={value}
           onChange={(event) => setValue(event.target.value)}
-          className="min-h-11 w-32 rounded-lg border border-encre/20 bg-white px-4 py-3 font-mono text-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+          className="w-[8ch] border-0 bg-transparent text-center font-mono text-5xl font-bold text-encre focus-visible:outline-none focus-visible:ring-0"
         />
-        <span className="font-mono text-lg text-encre/70">{currency}</span>
+        <span className="font-mono text-3xl font-medium text-encre/70">{currency}</span>
       </div>
-      <Button type="submit" disabled={!isValid}>
-        Commencer
+      <Button type="submit" variant="pill" disabled={!isValid}>
+        C&apos;est parti
       </Button>
     </form>
   );

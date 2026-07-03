@@ -1,4 +1,5 @@
 import { BrowserRouter, Route, Routes } from "react-router";
+import AppLayout from "./components/ui/AppLayout";
 import Home from "./pages/Home";
 import Editor from "./pages/Editor";
 import Play from "./pages/Play";
@@ -15,11 +16,13 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/editeur" element={<Editor />} />
-        <Route path="/jouer" element={<Play />} />
-        <Route path="/j/:code" element={<Play />} />
-        <Route path="*" element={<NotFound />} />
+        <Route element={<AppLayout />}>
+          <Route path="/" element={<Home />} />
+          <Route path="/editeur" element={<Editor />} />
+          <Route path="/jouer" element={<Play />} />
+          <Route path="/j/:code" element={<Play />} />
+          <Route path="*" element={<NotFound />} />
+        </Route>
       </Routes>
     </BrowserRouter>
   );

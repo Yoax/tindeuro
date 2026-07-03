@@ -94,6 +94,25 @@ describe("loadDraft / saveDraft", () => {
     };
     expect(() => saveDraft(storage, createBlankDraftState())).not.toThrow();
   });
+
+  it("normalise les catégories manquantes à la relecture", () => {
+    const storage = fakeStorage();
+    const legacy = {
+      deck: {
+        version: 1,
+        id: "legacy",
+        title: "",
+        currency: "€",
+        defaultVisibility: "hidden",
+        budget: { kind: "free" },
+        shuffle: false,
+        cards: [card({ category: "Loisirs" })],
+      },
+      publishedAs: null,
+    };
+    storage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(legacy));
+    expect(loadDraft(storage)?.deck.categories).toEqual(["Loisirs"]);
+  });
 });
 
 describe("addOrReplaceCard", () => {

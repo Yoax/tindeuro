@@ -11,6 +11,7 @@ function sampleDeck(overrides: Partial<Deck> = {}): Deck {
     defaultVisibility: "hidden",
     budget: { kind: "suggested", amount: 150 },
     shuffle: false,
+    categories: ["Alimentation"],
     cards: [{ id: "c1", kind: "decision", text: "Une situation", cost: 9, category: "Alimentation" }],
     ...overrides,
   };

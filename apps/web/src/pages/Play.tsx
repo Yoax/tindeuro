@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useLocation, useParams } from "react-router";
+import { useLocation, useParams } from "react-router";
+import { isDemoPlayCode } from "@budget-game/shared";
+import CenteredMessage from "../components/ui/CenteredMessage";
 import { fetchDeckByCode, type FetchDeckResult } from "../lib/api";
 import { decodeDeckFromFragment } from "../lib/deckCodec";
+import { exampleDeck } from "../data/exampleDeck";
 import PlaySession from "../components/play/PlaySession";
 
 /**
@@ -16,6 +19,9 @@ export default function Play() {
   const location = useLocation();
 
   if (code) {
+    if (isDemoPlayCode(code)) {
+      return <PlaySession deck={exampleDeck} />;
+    }
     return <PlayFromCode code={code} />;
   }
 
@@ -27,7 +33,20 @@ function PlayFromFragment({ hash }: { hash: string }) {
   const result = useMemo(() => decodeDeckFromFragment(fragment), [fragment]);
 
   if (!result.ok) {
-    return <InvalidLink />;
+    if (result.reason === "empty") {
+      return (
+        <CenteredMessage
+          title="Aucun atelier ici"
+          description="Utilise le lien ou le code fourni par l'animateur."
+        />
+      );
+    }
+    return (
+      <CenteredMessage
+        title="Ce lien semble incomplet"
+        description="Demande à l'animateur de le régénérer."
+      />
+    );
   }
 
   return <PlaySession deck={result.deck} />;
@@ -66,22 +85,4 @@ function PlayFromCode({ code }: { code: string }) {
   }
 
   return <PlaySession deck={result.deck} />;
-}
-
-function InvalidLink() {
-  return (
-    <CenteredMessage title="Ce lien semble incomplet" description="Demande à l'animateur de le régénérer." />
-  );
-}
-
-function CenteredMessage({ title, description }: { title: string; description: string }) {
-  return (
-    <main className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-4 px-6 text-center">
-      <h1 className="text-xl font-bold">{title}</h1>
-      <p className="text-encre/80">{description}</p>
-      <Link to="/" className="text-accent underline underline-offset-2">
-        Retour à l'accueil
-      </Link>
-    </main>
-  );
 }

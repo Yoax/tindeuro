@@ -40,7 +40,7 @@ export default function RevealTicket({ ticket, categoryTotals, currency }: Revea
     >
       <div className="receipt rounded-sm bg-white px-5 py-6 font-mono text-sm">
         {ticket.length === 0 ? (
-          <p className="font-sans text-encre/60">Aucune dépense acceptée.</p>
+          <p className="font-sans text-encre/70">Aucune dépense acceptée.</p>
         ) : (
           <motion.ul
             variants={reducedMotion ? undefined : listVariants}
@@ -57,7 +57,7 @@ export default function RevealTicket({ ticket, categoryTotals, currency }: Revea
                 <div className="font-sans">
                   <p>{line.card.text}</p>
                   {line.card.recurring && (
-                    <p className="text-xs text-encre/50">
+                    <p className="text-xs text-encre/70">
                       {line.card.cost} {currency} × {line.card.recurring.label}
                     </p>
                   )}

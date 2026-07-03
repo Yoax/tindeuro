@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { nanoid } from "nanoid";
-import type { Card, Deck } from "@budget-game/shared";
-import { exampleDeck } from "../data/exampleDeck";
+import { exampleDeck, normalizeDeckCategories, type Card, type Deck } from "@budget-game/shared";
 import {
   addOrReplaceCard,
   createBlankDraftState,
@@ -63,11 +62,15 @@ export function useDeckDraft(): DeckDraft {
     // code déjà publié : ce n'est plus le même contenu.
     loadExample: () =>
       setState({
-        deck: { ...exampleDeck, id: nanoid(10), cards: exampleDeck.cards.map((c) => ({ ...c })) },
+        deck: normalizeDeckCategories({
+          ...exampleDeck,
+          id: nanoid(10),
+          cards: exampleDeck.cards.map((c) => ({ ...c })),
+        }),
         publishedAs: null,
       }),
     resetBlank: () => setState(createBlankDraftState()),
-    replaceDeck: (next) => setState({ deck: next, publishedAs: null }),
+    replaceDeck: (next) => setState({ deck: normalizeDeckCategories(next), publishedAs: null }),
     markPublished: (info) => setState((s) => ({ ...s, publishedAs: info })),
   };
 }

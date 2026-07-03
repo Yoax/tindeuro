@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { nanoid } from "nanoid";
-import type { Card, CardKind, CostVisibility } from "@budget-game/shared";
+import { cardImageUrlSchema, type Card, type CardKind, type CostVisibility } from "@budget-game/shared";
 import Field, { inputClass } from "../ui/Field";
 import Button from "../ui/Button";
 
@@ -43,6 +43,8 @@ export default function CardForm({
   const [recurringTimes, setRecurringTimes] = useState(initial?.recurring ? String(initial.recurring.times) : "1");
   const [recurringLabel, setRecurringLabel] = useState(initial?.recurring?.label ?? "par mois ensuite");
   const [tagsText, setTagsText] = useState(initial?.tags?.join(", ") ?? "");
+  const [imageUrl, setImageUrl] = useState(initial?.imageUrl ?? "");
+  const [imageLoadFailed, setImageLoadFailed] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -92,6 +94,15 @@ export default function CardForm({
       .map((t) => t.trim())
       .filter(Boolean);
 
+    const trimmedImageUrl = imageUrl.trim();
+    if (trimmedImageUrl) {
+      const imageResult = cardImageUrlSchema.safeParse(trimmedImageUrl);
+      if (!imageResult.success) {
+        setError("L'URL de l'image doit commencer par http(s):// ou /.");
+        return;
+      }
+    }
+
     const card: Card = {
       id: initial?.id ?? nanoid(8),
       kind,
@@ -102,6 +113,7 @@ export default function CardForm({
       ...(costRange ? { costRange } : {}),
       ...(recurring ? { recurring } : {}),
       ...(tags.length > 0 ? { tags } : {}),
+      ...(trimmedImageUrl ? { imageUrl: trimmedImageUrl } : {}),
     };
 
     setError(null);
@@ -119,21 +131,21 @@ export default function CardForm({
           <button
             type="button"
             onClick={() => setKind("decision")}
-            className={`px-3 py-1.5 ${kind === "decision" ? "bg-accent text-white" : "text-encre/70"}`}
+            className={`min-h-11 px-3 ${kind === "decision" ? "bg-accent text-white" : "text-encre/70"}`}
           >
             Décision
           </button>
           <button
             type="button"
             onClick={() => setKind("event")}
-            className={`px-3 py-1.5 ${kind === "event" ? "bg-accent text-white" : "text-encre/70"}`}
+            className={`min-h-11 px-3 ${kind === "event" ? "bg-accent text-white" : "text-encre/70"}`}
           >
             Événement
           </button>
         </div>
       </div>
       {kind === "event" && (
-        <p className="text-xs text-encre/50">
+        <p className="text-xs text-encre/70">
           Une carte événement ne se refuse pas : le joueur n'a qu'un bouton « Continuer ».
         </p>
       )}
@@ -162,20 +174,31 @@ export default function CardForm({
           />
         </Field>
         <Field label="Catégorie" htmlFor="card-category">
-          <input
-            id="card-category"
-            list="categories-suggestions"
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            className={inputClass}
-          />
+          {categories.length > 0 ? (
+            <select
+              id="card-category"
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              className={inputClass}
+            >
+              <option value="">Choisir une catégorie…</option>
+              {categories.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <input
+              id="card-category"
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              placeholder="Ajoute des catégories dans les réglages du deck"
+              className={inputClass}
+            />
+          )}
         </Field>
       </div>
-      <datalist id="categories-suggestions">
-        {categories.map((c) => (
-          <option key={c} value={c} />
-        ))}
-      </datalist>
 
       <Field
         label="Visibilité du coût"
@@ -267,6 +290,41 @@ export default function CardForm({
           className={inputClass}
         />
       </Field>
+
+      <Field
+        label="URL de l'image (optionnel)"
+        htmlFor="card-image-url"
+        hint="Illustration affichée en haut de la carte pendant le swipe. URL externe uniquement."
+      >
+        <input
+          id="card-image-url"
+          type="url"
+          inputMode="url"
+          placeholder="https://…"
+          value={imageUrl}
+          onChange={(e) => {
+            setImageUrl(e.target.value);
+            setImageLoadFailed(false);
+          }}
+          className={inputClass}
+        />
+      </Field>
+
+      {imageUrl.trim() && (
+        <div className="flex items-center gap-3">
+          {imageLoadFailed ? (
+            <p className="text-xs text-depasse">Image inaccessible ou URL invalide.</p>
+          ) : (
+            <img
+              src={imageUrl.trim()}
+              alt=""
+              onError={() => setImageLoadFailed(true)}
+              onLoad={() => setImageLoadFailed(false)}
+              className="h-20 w-32 rounded-lg border border-encre/10 object-cover"
+            />
+          )}
+        </div>
+      )}
 
       {error && (
         <p role="alert" className="text-sm text-depasse">

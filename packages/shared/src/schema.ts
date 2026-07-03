@@ -25,6 +25,21 @@ export const recurringSchema = z.object({
   label: z.string().min(1),
 });
 
+/**
+ * URL d'illustration de carte — externe uniquement (pas d'upload binaire,
+ * pas de base64 : voir SPEC.md §4, contrainte de taille du lien
+ * auto-porteur et du stockage backend). Accepte aussi les chemins
+ * relatifs commençant par `/` (assets servis par le front lui-même).
+ */
+export const cardImageUrlSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .max(2000)
+  .refine((value) => /^https?:\/\//i.test(value) || value.startsWith("/"), {
+    message: "L'image doit être une URL http(s) ou un chemin commençant par /.",
+  });
+
 export const cardSchema = z.object({
   id: z.string().min(1),
   kind: z.enum(["decision", "event"]),
@@ -35,6 +50,7 @@ export const cardSchema = z.object({
   visibility: costVisibilitySchema.optional(),
   recurring: recurringSchema.optional(),
   tags: z.array(z.string()).optional(),
+  imageUrl: cardImageUrlSchema.optional(),
 });
 
 export const deckSchema = z.object({
@@ -46,5 +62,6 @@ export const deckSchema = z.object({
   defaultVisibility: costVisibilitySchema,
   budget: budgetModeSchema,
   shuffle: z.boolean(),
+  categories: z.array(z.string().min(1)).default([]),
   cards: z.array(cardSchema),
 });

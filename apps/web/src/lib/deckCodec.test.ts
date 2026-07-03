@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { compressToEncodedURIComponent } from "lz-string";
-import type { Card, Deck } from "@budget-game/shared";
+import { cardSchema, type Card, type Deck } from "@budget-game/shared";
 import { decodeDeckFromFragment, encodeDeckToFragment, expandDeck, minifyDeck } from "./deckCodec";
 import { exampleDeck } from "../data/exampleDeck";
 
@@ -50,6 +50,7 @@ describe("minifyDeck / expandDeck (aller-retour direct, sans compression)", () =
       defaultVisibility: "hidden",
       budget: { kind: "free" },
       shuffle: false,
+      categories: ["Maison"],
       cards: [makeCard({ id: "c1", text: "Une dépense.", cost: 10, category: "Maison" })],
     };
 
@@ -61,6 +62,35 @@ describe("minifyDeck / expandDeck (aller-retour direct, sans compression)", () =
     expect(minified.q[0].e).toBeUndefined(); // kind "decision" par défaut
     expect(minified.q[0].v).toBeUndefined(); // visibilité héritée
     expect(minified.q[0].a).toBeUndefined(); // tags vides
+    expect(minified.q[0].u).toBeUndefined(); // imageUrl absente
+  });
+
+  it("préserve une image de carte à travers minify/expand", () => {
+    const deck: Deck = {
+      version: 1,
+      id: "d1",
+      title: "Deck",
+      currency: "€",
+      defaultVisibility: "hidden",
+      budget: { kind: "free" },
+      shuffle: false,
+      categories: ["Maison"],
+      cards: [
+        makeCard({
+          id: "c1",
+          text: "Une dépense illustrée.",
+          cost: 10,
+          category: "Maison",
+          imageUrl: "https://picsum.photos/seed/test/800/600",
+        }),
+      ],
+    };
+
+    const minified = minifyDeck(deck);
+    expect(minified.q[0].u).toBe("https://picsum.photos/seed/test/800/600");
+
+    const roundTripped = expandDeck(minified);
+    expect(withoutIds(roundTripped)).toEqual(withoutIds(deck));
   });
 
   it("déduplique les catégories répétées", () => {
@@ -72,6 +102,7 @@ describe("minifyDeck / expandDeck (aller-retour direct, sans compression)", () =
       defaultVisibility: "hidden",
       budget: { kind: "free" },
       shuffle: false,
+      categories: [],
       cards: [
         makeCard({ id: "c1", text: "A", cost: 5, category: "Alimentation" }),
         makeCard({ id: "c2", text: "B", cost: 6, category: "Alimentation" }),
@@ -93,6 +124,7 @@ describe("minifyDeck / expandDeck (aller-retour direct, sans compression)", () =
       defaultVisibility: "hidden",
       budget: { kind: "free" },
       shuffle: true,
+      categories: ["Imprévus", "Abonnements"],
       cards: [
         makeCard({
           id: "c1",
@@ -138,6 +170,7 @@ describe("encodeDeckToFragment / decodeDeckFromFragment (aller-retour complet)",
       defaultVisibility: "range",
       budget: { kind: "fixed", amount: 100 },
       shuffle: false,
+      categories: ["Sorties & social"],
       cards: [
         makeCard({
           id: "c1",
@@ -177,6 +210,7 @@ describe("encodeDeckToFragment / decodeDeckFromFragment (aller-retour complet)",
       defaultVisibility: "hidden",
       budget: { kind: "suggested", amount: 300 },
       shuffle: true,
+      categories: ["Alimentation", "Transport"],
       cards,
     };
 
@@ -202,5 +236,31 @@ describe("encodeDeckToFragment / decodeDeckFromFragment (aller-retour complet)",
     const invalidPayload = compressToEncodedURIComponent(JSON.stringify({ not: "a deck" }));
     const result = decodeDeckFromFragment(invalidPayload);
     expect(result).toEqual({ ok: false, reason: "schema" });
+  });
+});
+
+describe("cardSchema.imageUrl", () => {
+  function baseCard(imageUrl?: string) {
+    return { id: "c1", kind: "decision", text: "Texte", cost: 10, category: "Maison", imageUrl };
+  }
+
+  it("accepte une URL http(s)", () => {
+    expect(cardSchema.safeParse(baseCard("https://picsum.photos/seed/x/800/600")).success).toBe(true);
+  });
+
+  it("accepte un chemin relatif commençant par /", () => {
+    expect(cardSchema.safeParse(baseCard("/images/kebab.jpg")).success).toBe(true);
+  });
+
+  it("est optionnelle", () => {
+    expect(cardSchema.safeParse(baseCard()).success).toBe(true);
+  });
+
+  it("rejette une chaîne qui n'est ni une URL ni un chemin relatif", () => {
+    expect(cardSchema.safeParse(baseCard("pas-une-url")).success).toBe(false);
+  });
+
+  it("rejette une URI data: (pas d'image encodée en base64)", () => {
+    expect(cardSchema.safeParse(baseCard("data:image/png;base64,AAAA")).success).toBe(false);
   });
 });

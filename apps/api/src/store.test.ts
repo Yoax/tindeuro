@@ -13,6 +13,7 @@ function sampleDeck(overrides: Partial<Deck> = {}): Deck {
     defaultVisibility: "hidden",
     budget: { kind: "suggested", amount: 150 },
     shuffle: false,
+    categories: ["Alimentation"],
     cards: [
       { id: "c1", kind: "decision", text: "Une situation", cost: 9, category: "Alimentation" },
     ],
@@ -92,5 +93,19 @@ describe("pruneOlderThan", () => {
     expect(deleted).toBe(1);
     expect(store.getDeck(old.code)).toBeNull();
     expect(store.getDeck(recent.code)).not.toBeNull();
+  });
+});
+
+describe("ensureDeckAtCode", () => {
+  it("insère le deck au code fixe s'il est libre", () => {
+    const deck = sampleDeck({ title: "Démo" });
+    store.ensureDeckAtCode("TEST", deck);
+    expect(store.getDeck("TEST")?.title).toBe("Démo");
+  });
+
+  it("ne remplace pas un deck déjà présent à ce code", () => {
+    store.ensureDeckAtCode("TEST", sampleDeck({ title: "Original" }));
+    store.ensureDeckAtCode("TEST", sampleDeck({ title: "Écrasé" }));
+    expect(store.getDeck("TEST")?.title).toBe("Original");
   });
 });
